@@ -1,7 +1,7 @@
 import java.awt.Color;
 import java.awt.geom.Point2D;
 
-public class Player1Logic extends LogicThinking {
+public class Player1Logic {
 	MainBot bot1 = null;
 
 	public Player1Logic(Point2D pos, double degree) {
@@ -28,8 +28,9 @@ public class Player1Logic extends LogicThinking {
 	// getDistanceDown() - ^^^^
 	// getDistanceUp() - ^^^^
 	//
-	// as funções matemáticas são chamadas: Se usares cos (função de cosseno) é
-	// Math.cos(34); (pro cosseno de 34) Math.random() - dá nº random de 0 a 1.
+	// as funções matemáticas são chamadas em graus: Se usares cos (função de cosseno) é
+	// Math.cos(34); -> pro cosseno de 34º
+	// Math.random(); -> dá nº random de 0 a 1, e.g. 0.248534.
 	// Escreves Math. fazes Ctrl+Espaço e ele da-te as opções.
 
 	public void decide() {
@@ -42,7 +43,7 @@ public class Player1Logic extends LogicThinking {
 		} else if (Math.random() > 0.939) {
 			bot1.turn(((Math.random() - 0.5) * 90));
 		}
-		ArenaGUI.drawS(bot1.centerX, bot1.centerY, true);
+//		ArenaGUI.drawS(bot1.centerX, bot1.centerY, true);
 		bot1.shoot();
 
 	}

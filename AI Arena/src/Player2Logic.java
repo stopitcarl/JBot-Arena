@@ -1,7 +1,7 @@
 import java.awt.Color;
 import java.awt.geom.Point2D;
 
-public class Player2Logic extends LogicThinking{
+public class Player2Logic{
 	MainBot bot1 = null;
 
 	// O bot é criado, com coords de (x;y), direção- degree, body_color e

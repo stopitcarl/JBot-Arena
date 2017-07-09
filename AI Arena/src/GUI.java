@@ -30,8 +30,8 @@ public class GUI extends JFrame {
 
 	ArenaGUI center_panel = null;
 	Thread gui_thread = null;
-	public static int width = 1000;
-	public static int height = 700;
+	public static int width = 1600;
+	public static int height = 1000;
 	private JTextField score_keeper;
 	JButton start_btn;
 

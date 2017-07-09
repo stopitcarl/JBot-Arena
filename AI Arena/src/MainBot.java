@@ -36,13 +36,16 @@ public class MainBot {
 	double y = 0;
 	double vel = 15;
 	long time = 0;
-	final int BULLET_RELOAD = 1000;
-	final int DAMAGE = 200;
+	final int BULLET_RELOAD = 500;
+	final int DAMAGE = 23;
 	private double timeToShoot = 2000;
 	List<Bullets> bullets = new ArrayList<>();
+	// Enemy
+	long enemy_last_detected = 0L;
+	long enemy_detect_timeout = 1000L;
 	private Ellipse2D enemy = null;
 	boolean isEnemyinRange = false;
-
+	
 	public MainBot(Point2D pos, double degree, Color col, String nam) {
 		this.x = pos.getX();
 		this.y = pos.getY();

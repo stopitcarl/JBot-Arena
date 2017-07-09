@@ -9,6 +9,9 @@ public class CombatRing implements Runnable {
 	boolean running = true;
 	double velocity = 10;
 	boolean isOver = false;
+	long time;
+	// player's variables
+	BotManager botmgr;
 	// bots variables
 	public static boolean bot_1_detect = true;
 	long bot_1_detected = 0L;
@@ -22,7 +25,7 @@ public class CombatRing implements Runnable {
 	String bot2_name = "";
 	Point2D pos0 = new Point2D.Double(100, 100);
 	Point2D pos1 = new Point2D.Double(GUI.width - 100, GUI.height - 100);
-	ArrayList<LogicThinking> botsList = new ArrayList<>();
+	ArrayList<MainBot> botsList = new ArrayList<>();
 	// GUI variables
 	GUI gui = null;
 	int fps = 60;
@@ -31,6 +34,7 @@ public class CombatRing implements Runnable {
 
 	public CombatRing() {
 		System.out.println("Score: " + bot1_score + " - " + bot2_score);
+		// Start GUI
 		gui = new GUI();
 		gui.start_btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -43,11 +47,15 @@ public class CombatRing implements Runnable {
 			}
 		});
 
-		// Creating 1st bot
-		botsList.add(new Player1Logic(pos0, 0));
-		// Creating 2nd bot
-		botsList.add(new Player2Logic(pos1, Math.random() * 360));
-		System.out.println("Created bots 1 and 2");
+		// Create a bot manager which will hold player's object adn their bots.
+		// (Copies bots object by "passing by value")
+		botmgr = new BotManager();
+
+		// Copying player 1's bot
+		botsList.add(botmgr.getBot(1));
+		// Copying player 2's bot
+		botsList.add(botmgr.getBot(2));
+		System.out.println("Created list with player's bots" + botsList.size());
 
 		startFight();
 	}
@@ -67,8 +75,8 @@ public class CombatRing implements Runnable {
 	}
 
 	void updateNames() {
-		bot1_name = botsList.get(0).player_1.bot1.name;
-		bot2_name = botsList.get(1).player_2.bot1.name;
+		bot1_name = botsList.get(0).name;
+		bot2_name = botsList.get(1).name;
 		gui.update_score(bot1_name, bot2_name, bot1_score, bot2_score);
 	}
 
@@ -89,7 +97,7 @@ public class CombatRing implements Runnable {
 	void gatherData() {
 		collisionDetection();
 		gui.center_panel.isBotReady = true;
-		gui.center_panel.updateData(botsList.get(0).player_1.bot1, botsList.get(1).player_2.bot1);
+		gui.center_panel.updateData(botsList.get(0), botsList.get(1));
 	}
 
 	boolean colides(MainBot bot, Bullets bullet) {
@@ -105,18 +113,35 @@ public class CombatRing implements Runnable {
 
 	void collisionDetection() {
 
-		// If detected, give that info to detector bot
-		// and disable his detection radius for timeout
-		if (botsList.get(0).player_1.bot1.detect.intersects(botsList.get(1).player_2.bot1.body.getFrame())) {
-			botsList.get(0).player_1.bot1.enemyDetected(botsList.get(1).player_2.bot1.body);
+		// a is victim, b is shooter. Check if a collides with b's bullets
+		// If hit, a.loseLife(); and b.getPoints().
+		for (int a = 0; a < botsList.size(); a++) {
+			for (int b = 0; b < botsList.size(); b++) {
+				
+				if (a == b) // Avoid checking if bot hits itself.
+					continue;
+				
+				time = System.currentTimeMillis();
+				if (time - botsList.get(a).enemy_last_detected > botsList.get(a).enemy_detect_timeout) {
+					for (int i = 0; i > botsList.get(b).bullets.size(); i++) {
+						if ( colides(botsList.get(a), botsList.get(b).bullets.get(i)) );
+							botsList.get(a).loseLife();
+					}
+				}
+
+			}
+		}
+
+		if (botsList.get(0).detect.intersects(botsList.get(1).body.getFrame())) {
+			botsList.get(0).enemyDetected(botsList.get(1).body);
 			bot_1_detect = false;
 			bot_1_detected = System.currentTimeMillis();
 		}
 		if (System.currentTimeMillis() - bot_1_detected > bot_1_detect_timeout)
 			bot_1_detect = true;
 		// and now same for bot 2
-		if (botsList.get(1).player_2.bot1.detect.intersects(botsList.get(0).player_1.bot1.body.getFrame())) {
-			botsList.get(1).player_2.bot1.enemyDetected(botsList.get(0).player_1.bot1.body);
+		if (botsList.get(1).detect.intersects(botsList.get(0).body.getFrame())) {
+			botsList.get(1).enemyDetected(botsList.get(0).body);
 			bot_2_detect = false;
 			bot_2_detected = System.currentTimeMillis();
 		}
@@ -129,24 +154,24 @@ public class CombatRing implements Runnable {
 			for (int secB = 0; secB < botsList.size(); secB++) {
 
 				if (secB == mainB)
-					break;
+					continue;
 
 				// if player_2 collides with player 1's bullets
-				for (int i = 0; i < botsList.get(mainB).player_1.bot1.bullets.size(); i++) {
-					if (colides(botsList.get(secB).player_2.bot1, botsList.get(0).player_1.bot1.bullets.get(i))) {
+				for (int i = 0; i < botsList.get(mainB).bullets.size(); i++) {
+					if (colides(botsList.get(secB), botsList.get(mainB).bullets.get(i))) {
 						System.out.println("Bot " + 2 + " intersects bullet nº " + i);
-						botsList.get(0).player_1.bot1.bullets.remove(i);
-						botsList.get(1).player_2.bot1.loseLife();
+						botsList.get(mainB).bullets.remove(i);
+						botsList.get(secB).loseLife();
 					}
 				}
 			}
 		}
 		// if player_1 collides with player 2's bullets
-		for (int i = 0; i < botsList.get(1).player_2.bot1.bullets.size(); i++) {
-			if (colides(botsList.get(0).player_1.bot1, botsList.get(1).player_2.bot1.bullets.get(i))) {
+		for (int i = 0; i < botsList.get(1).bullets.size(); i++) {
+			if (colides(botsList.get(0), botsList.get(1).bullets.get(i))) {
 				System.out.println("Bot " + 2 + " intersects bullet nº " + i);
-				botsList.get(1).player_2.bot1.bullets.remove(i);
-				botsList.get(0).player_1.bot1.loseLife();
+				botsList.get(1).bullets.remove(i);
+				botsList.get(0).loseLife();
 			}
 		}
 
@@ -158,24 +183,29 @@ public class CombatRing implements Runnable {
 		System.out.println("ArenaGui is running");
 		while (running) {
 			try {
-				if (botsList.get(0).player_1.bot1.life_left < 0 || botsList.get(1).player_2.bot1.life_left < 0) {
+				// Check bot's life_left, if life_left < 0, game's over
+				if (botsList.get(0).life_left < 0 || botsList.get(1).life_left < 0) {
 					isOver = true;
 					running = false;
-					if (botsList.get(0).player_1.bot1.life_left < 0) {
+					if (botsList.get(0).life_left < 0) {
 						bot1_score++;
 					} else {
 						bot2_score++;
 					}
 					updateNames();
 					gui.center_panel.displayGameOver();
+					gatherData();
 					break;
 				} else {
-					botsList.get(0).player_1.decide();
-					botsList.get(1).player_2.decide();
-				}
-				botsList.get(0).player_1.bot1.updateBot();
-				botsList.get(1).player_2.bot1.updateBot();
+					botmgr.updateBots();
+					botsList.set(0, botmgr.getBot(1));
+					botsList.set(1, botmgr.getBot(2));		
+					for(MainBot bot : botsList){
+						bot.updateBot();
+					}
+				}				
 				gatherData();
+				
 				Thread.sleep(sleeptime);
 			} catch (InterruptedException e) {
 				System.out.println("CombatRing Thread can't sleep");
