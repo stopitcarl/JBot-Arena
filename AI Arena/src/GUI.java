@@ -30,10 +30,10 @@ public class GUI extends JFrame {
 
 	ArenaGUI center_panel = null;
 	Thread gui_thread = null;
-	public static int width = 1600;
-	public static int height = 1000;
+	public static int width = 1000;
+	public static int height = 600;
 	private JTextField score_keeper;
-	JButton start_btn;
+	JButton start_btn, reset_btn, isBot1Manual;
 
 	public GUI() {
 		System.out.println("Starting Frame");
@@ -47,8 +47,8 @@ public class GUI extends JFrame {
 
 		// Master JPanel
 		JPanel panel = new JPanel();
-		getContentPane().add(panel);
 		panel.setLayout(new BorderLayout(0, 0));
+		getContentPane().add(panel);
 
 		// Sub -Panels
 		JPanel top_panel = new JPanel();
@@ -62,12 +62,22 @@ public class GUI extends JFrame {
 		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 22));
 		top_panel.add(lblNewLabel);
 
+		isBot1Manual = new JButton("AI 1");
+		isBot1Manual.setForeground(new Color(51, 0, 255));
+		isBot1Manual.setToolTipText("Toggles Bot 1's algorithm");
+		isBot1Manual.setFont(new Font("MV Boli", Font.BOLD, 19));
+		isBot1Manual.setBackground(new Color(153, 255, 0));
+		isBot1Manual.setFocusable(false);
+		top_panel.add(isBot1Manual);
+
 		score_keeper = new JTextField();
 		score_keeper.setDisabledTextColor(Color.LIGHT_GRAY);
 		score_keeper.setText("BOT  0 : 0  BOT");
 		score_keeper.setFont(new Font("Tahoma", Font.PLAIN, 26));
 		score_keeper.setHorizontalAlignment(SwingConstants.CENTER);
 		score_keeper.setToolTipText("Bots score");
+		score_keeper.setEditable(false);
+		score_keeper.setFocusable(false);
 		top_panel.add(score_keeper);
 		score_keeper.setColumns(10);
 
@@ -75,12 +85,13 @@ public class GUI extends JFrame {
 		start_btn.setMargin(new Insets(2, 2, 2, 2));
 		start_btn.setAlignmentX(Component.CENTER_ALIGNMENT);
 		start_btn.setFont(new Font("Tahoma", Font.PLAIN, 24));
+		start_btn.setFocusable(false);
 		top_panel.add(start_btn);
 
-		JButton start_btn = new JButton("Reset");
-		start_btn.setMargin(new Insets(2, 2, 2, 2));
-		start_btn.setFont(new Font("Tahoma", Font.PLAIN, 24));
-		top_panel.add(start_btn);
+		reset_btn = new JButton("Reset");
+		reset_btn.setMargin(new Insets(2, 2, 2, 2));
+		reset_btn.setFont(new Font("Tahoma", Font.PLAIN, 24));
+		top_panel.add(reset_btn);
 
 		// Center Panel
 		startGUI();
@@ -99,6 +110,7 @@ public class GUI extends JFrame {
 		center_panel = new ArenaGUI(width, height);
 		center_panel.setBorder(new BevelBorder(BevelBorder.LOWERED, Color.RED, new Color(255, 51, 51),
 				new Color(51, 51, 204), new Color(51, 51, 102)));
+		center_panel.setFocusable(true);
 		System.out.println("GUI process successfully started.");
 	}
 
@@ -146,6 +158,7 @@ class ArenaGUI extends JPanel {
 		repaint();
 	}
 
+	// Debugging only
 	public static void drawS(double x, double y, boolean bool) {
 		testering = bool;
 		testX = x;
@@ -162,6 +175,7 @@ class ArenaGUI extends JPanel {
 	// Get's variables from object and paints child objects
 	@Override
 	public void paintComponent(Graphics g) {
+
 		g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -232,7 +246,7 @@ class ArenaGUI extends JPanel {
 			// g2.setColor(orange);
 			// g2.("Game Over", GUI.width / 2, GUI.height / 2);
 		}
-
+		// Weird debugging (dont member having put thjs, aint removing neither)
 		if (testering) {
 			g2.drawRect((int) testX, (int) testY, 10, 10);
 		}

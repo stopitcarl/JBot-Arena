@@ -1,7 +1,12 @@
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+
+import javax.swing.JButton;
 
 public class CombatRing implements Runnable {
 
@@ -12,6 +17,13 @@ public class CombatRing implements Runnable {
 	long time;
 	// player's variables
 	BotManager botmgr;
+	public boolean isAI1 = false;
+	public boolean isAI2 = false;
+	private boolean[] controls = { false, false, false, false, false }; // Up,
+																		// Right,
+																		// Down,
+																		// Left,
+																		// Shoot
 	// bots variables
 	public static boolean bot_1_detect = true;
 	long bot_1_detected = 0L;
@@ -29,25 +41,25 @@ public class CombatRing implements Runnable {
 	// GUI variables
 	GUI gui = null;
 	int fps = 60;
-	int sleeptime = 10;
+	int sleeptime = 1000 / 60;
 	int hits = 0;
 
 	public CombatRing() {
 		System.out.println("Score: " + bot1_score + " - " + bot2_score);
+
 		// Start GUI
 		gui = new GUI();
-		gui.start_btn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (isOver) {
-					reset();
-				} else {
-					reset();
-				}
 
-			}
-		});
+		// Wire up events
+		ButtonHandler buttonHandler = new ButtonHandler();
+		gui.start_btn.addActionListener(buttonHandler);
+		gui.isBot1Manual.addActionListener(buttonHandler);
+		gui.reset_btn.addActionListener(buttonHandler);
+		// Controls
+		KeyHandler keyHandler = new KeyHandler();
+		gui.addKeyListener(keyHandler);
 
-		// Create a bot manager which will hold player's object adn their bots.
+		// Create a bot manager which will hold player's object and their bots.
 		// (Copies bots object by "passing by value")
 		botmgr = new BotManager();
 
@@ -65,12 +77,13 @@ public class CombatRing implements Runnable {
 		updateNames();
 	}
 
-	void reset() {
+	public void reset() {
 		gui.dispose();
 		botsList.clear();
 
-		new Thread(new CombatRing()).start(); // Create Thread, CombatRing and
-												// start() it
+		// Create thread, CombatRing and start thread it
+
+		new Thread(new CombatRing()).start();
 
 	}
 
@@ -96,6 +109,10 @@ public class CombatRing implements Runnable {
 
 	void gatherData() {
 		collisionDetection();
+		repaint();
+	}
+
+	void repaint() {
 		gui.center_panel.isBotReady = true;
 		gui.center_panel.updateData(botsList.get(0), botsList.get(1));
 	}
@@ -117,14 +134,14 @@ public class CombatRing implements Runnable {
 		// If hit, a.loseLife(); and b.getPoints().
 		for (int a = 0; a < botsList.size(); a++) {
 			for (int b = 0; b < botsList.size(); b++) {
-				
+
 				if (a == b) // Avoid checking if bot hits itself.
 					continue;
-				
+
 				time = System.currentTimeMillis();
 				if (time - botsList.get(a).enemy_last_detected > botsList.get(a).enemy_detect_timeout) {
 					for (int i = 0; i > botsList.get(b).bullets.size(); i++) {
-						if ( colides(botsList.get(a), botsList.get(b).bullets.get(i)) );
+						if (colides(botsList.get(a), botsList.get(b).bullets.get(i)))
 							botsList.get(a).loseLife();
 					}
 				}
@@ -177,6 +194,19 @@ public class CombatRing implements Runnable {
 
 	}
 
+	private void manualMove() {
+		if (controls[0])
+			botsList.get(0).move(6);
+		if (controls[1])
+			botsList.get(0).turn(6);
+		if (controls[2])
+			botsList.get(0).move(6);
+		if (controls[3])
+			botsList.get(0).turn(-6);
+		if (controls[4])
+			botsList.get(0).shoot();
+	}
+
 	@Override
 	public void run() {
 
@@ -187,25 +217,40 @@ public class CombatRing implements Runnable {
 				if (botsList.get(0).life_left < 0 || botsList.get(1).life_left < 0) {
 					isOver = true;
 					running = false;
+					// System.out.println("A bot died");
 					if (botsList.get(0).life_left < 0) {
-						bot1_score++;
-					} else {
 						bot2_score++;
+						System.out.println("Bot 1 Died");
+					} else {
+						bot1_score++;
+						System.out.println("Bot 2 Died");
 					}
-					updateNames();
-					gui.center_panel.displayGameOver();
-					gatherData();
-					break;
-				} else {
+					// System.out.println("updating bots");
 					botmgr.updateBots();
 					botsList.set(0, botmgr.getBot(1));
-					botsList.set(1, botmgr.getBot(2));		
-					for(MainBot bot : botsList){
+					botsList.set(1, botmgr.getBot(2));
+					for (MainBot bot : botsList) {
 						bot.updateBot();
 					}
-				}				
+					updateNames();
+					repaint();
+					gui.center_panel.displayGameOver();
+					break;
+				} else {
+
+					// Move manually
+					if (!botsList.get(0).autonomous)
+						manualMove();
+
+					botmgr.updateBots();
+					botsList.set(0, botmgr.getBot(1));
+					botsList.set(1, botmgr.getBot(2));
+					for (MainBot bot : botsList) {
+						bot.updateBot();
+					}
+				}
 				gatherData();
-				
+
 				Thread.sleep(sleeptime);
 			} catch (InterruptedException e) {
 				System.out.println("CombatRing Thread can't sleep");
@@ -216,4 +261,91 @@ public class CombatRing implements Runnable {
 
 	}
 
+	private class ButtonHandler implements ActionListener {
+		Color green = new Color(0, 255, 0);
+		Color red = new Color(255, 0, 0);
+
+		public void actionPerformed(ActionEvent e) {
+			JButton source = (JButton) e.getSource();
+
+			if (source == gui.start_btn) {
+				reset();
+			}
+
+			if (source == gui.reset_btn) {
+				reset();
+			}
+
+			if (source == gui.isBot1Manual) {
+
+				isAI1 = isAI1 ? false : true; // Toggle the bool value
+				botsList.get(0).autonomous = isAI1;
+				gui.isBot1Manual.setBackground(isAI1 ? green : red);
+				System.out.println("The AI is " + (isAI1 ? "On" : "Off"));
+			}
+
+		}
+
+	}
+
+	private class KeyHandler implements KeyListener {
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			System.out.println("key typed");
+
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			// System.out.println("key pressed");
+			switch (e.getKeyCode()) {
+			case 37: // Left
+				controls[3] = true;
+				break;
+			case 38: // Up
+				controls[0] = true;
+				break;
+			case 39: // Right
+				controls[1] = true;
+				break;
+			case 40: // Down
+				controls[2] = true;
+				break;
+			case 32:
+				controls[4] = true;
+			default:
+				System.out.println("Code of input is:" + e.getKeyCode());
+				break;
+
+			}
+
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			System.out.println("released");
+
+			switch (e.getKeyCode()) {
+			case 37: // Left
+				controls[3] = false;
+				break;
+			case 38: // Up
+				controls[0] = false;
+				break;
+			case 39: // Right
+				controls[1] = false;
+				break;
+			case 40: // Down
+				controls[2] = false;
+				break;
+			case 32:
+				controls[4] = false;
+			default:
+				System.out.println("Code of input is:" + e.getKeyCode());
+				break;
+			}
+		}
+
+	}
 }

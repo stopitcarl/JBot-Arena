@@ -11,6 +11,8 @@ public class BotManager {
 	MainBot play2;
 	Player1Logic player_1 = null;
 	Player2Logic player_2 = null;
+	public boolean isAI1 = false;
+	public boolean isAI2 = false;
 
 	public BotManager() {
 		// Instantiate player objects
@@ -18,7 +20,7 @@ public class BotManager {
 		player_2 = new Player2Logic(pos1, 180);
 
 	}
-	
+
 	// Get player's bots
 	MainBot getBot(int i) {
 		switch (i) {
@@ -33,7 +35,8 @@ public class BotManager {
 		return null;
 
 	}
-	void updateBots(){
+
+	void updateBots() {
 		player_1.decide();
 		player_2.decide();
 	}

@@ -45,7 +45,8 @@ public class MainBot {
 	long enemy_detect_timeout = 1000L;
 	private Ellipse2D enemy = null;
 	boolean isEnemyinRange = false;
-	
+	public boolean autonomous = true;
+
 	public MainBot(Point2D pos, double degree, Color col, String nam) {
 		this.x = pos.getX();
 		this.y = pos.getY();
@@ -83,11 +84,15 @@ public class MainBot {
 	void move(int units) {
 		if (units > 10)
 			units = 10;
-		if (units < -10)
+		else if (units < -10)
 			units = -10;
 
 		// Get delta time
-		delta = System.currentTimeMillis() - time_body;
+		if (!autonomous)
+			delta = 16;
+		else
+			delta = System.currentTimeMillis() - time_body;
+
 		// Get x (cos) and y (sin) vectors
 		cos = delta * Math.cos(degree);
 		sin = delta * Math.sin(degree);
@@ -184,6 +189,12 @@ public class MainBot {
 	}
 
 	void updateFigure() {
+		// Fix bug #253.3
+		// Making sure delta_time is functional when AI is OFF
+		// and ON again
+		if (!autonomous)
+			time_body = System.currentTimeMillis();
+
 		body.setFrame(x, y, radius * 2, radius * 2);
 		head.setLine(body.getCenterX(), body.getCenterY(), getHeadX(), getHeadY());
 		detect.setFrame(body.getCenterX() - detect_radius / 2, body.getCenterY() - detect_radius / 2, detect_radius,
