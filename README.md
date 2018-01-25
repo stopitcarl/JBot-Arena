@@ -12,7 +12,7 @@ The manual controls are:
  - Shoot: space.
 
 
-To be implemented:
+## To be implemented:
   * Have bots be controlled with Python, Javascript or other languages.
   * Virtually unlimited arena - no fixed width or height, the screen just adapts to paint the bots inside it and zooms in and out accordingly.
   * Better support for graphics library like OpenGL.
