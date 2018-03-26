@@ -16,4 +16,4 @@ The manual controls are:
   * Have bots be controlled with Python, Javascript or other languages.
   * Virtually unlimited arena - no fixed width or height, the screen just adapts to paint the bots inside it and zooms in and out accordingly.
   * Weapon and life upgrades that a bot can purchase while in-match.
-  * Added support for external language comms
+  * Support for data serialization (using external programs to control bots - machine learning).
